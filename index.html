@@ -73,6 +73,7 @@
   .field{margin-bottom:1.4rem;}
   .field label{display:block;font-size:.85rem;font-weight:600;margin-bottom:.4rem;}
   .field .hint{display:block;font-size:.78rem;color:var(--pencil);font-weight:400;margin-top:.15rem;}
+  .entity-note{font-family:var(--mono);font-size:.76rem;line-height:1.5;color:var(--brass);margin-top:.55rem;padding-left:.6rem;border-left:2px solid var(--brass-bright);}
   .field input, .field textarea{
     width:100%;border:1px solid #cfc6ab;background:#fff;padding:.65rem .75rem;
     font-size:.95rem;border-radius:2px;color:var(--ink);resize:vertical;
@@ -205,7 +206,8 @@
 <script>
 /* ---------------- Data model ---------------- */
 const state = {
-  businessName:'', businessType:'Startup', industry:'', location:'', pitch:'',
+  businessName:'', businessType:'Not yet decided', industry:'Not yet specified', location:'', pitch:'',
+  ipaStatus:'Not yet registered', ipaNumber:'', tin:'', gstStatus:'Not registered for GST',
   targetCustomers:'', marketSize:'', competitors:'', advantage:'',
   offerings:'', pricingModel:'',
   team:'', facilities:'', partners:'',
@@ -213,14 +215,54 @@ const state = {
   shortTermGoals:'', longTermVision:'', risks:''
 };
 
+const ENTITY_NOTES = {
+  'Not yet decided': 'Pick the closest fit for now — this can change before actual registration.',
+  'Business Name (sole trader / single activity)': 'Registered on IPA Form A-17 \u2014 covers one business activity only, and a village address isn\u2019t accepted as the principal place of business. Renews annually.',
+  'Company \u2013 Domestic': 'Registered on IPA Form A-1 under the Companies Act 1997. Needs a reserved name, at least one director, and shareholder details \u2014 a constitution is optional.',
+  'Company \u2013 Foreign-owned': 'Registered on the same Form A-1, ticked as a foreign enterprise (more than 50% owned or controlled by non-citizens). Must also apply separately for an IPA certificate under the Investment Promotion Act within 14 days.',
+  'Business Group (customary/rural)': 'Registered on IPA Form A-10 under the Business Groups Incorporation Act 1974. Needs at least three named applicants and must be a genuine customary group \u2014 citizens only.',
+  'Association (not-for-profit)': 'Starts with a Notice of Intent (Form A-5) naming committee members and proposed rules, then a formal application once the objection period ends. Cannot trade directly.'
+};
+
+const INDUSTRY_OPTIONS = [
+  'Not yet specified',
+  'Agriculture, Hunting and Forestry',
+  'Fishing',
+  'Mining and Quarrying',
+  'Manufacturing',
+  'Electricity, Gas, Steam and Water Supply',
+  'Construction',
+  'Wholesale and Retail Trade, Sale and Repair of Motor Vehicles, Motor Cycles, Personal and Household Goods',
+  'Hotels and Restaurants',
+  'Transport, Storage and Communication',
+  'Financial Intermediation',
+  'Real Estate, Renting and Business Services Activities',
+  'Public Administration and Defence, Compulsory Social Security',
+  'Education',
+  'Health and Social Work',
+  'Other Community, Social and Personal Service Activities',
+  'Private Households with Employed Persons',
+  'Extra-Territorial Organization and Bodies'
+];
+
 const INTAKE_SECTIONS = [
   { key:'company', label:'Company', title:'Company basics', sub:'Start with the fundamentals — who, what, and where.',
     fields:[
       {id:'businessName', label:'Business name', type:'input'},
-      {id:'businessType', label:'Business type', type:'select', options:['Startup','Small Business','Corporation','Nonprofit / Social Enterprise','Cooperative']},
-      {id:'industry', label:'Industry', type:'input'},
-      {id:'location', label:'Location', type:'input'},
+      {id:'businessType', label:'Entity type (IPA classification)', type:'select', note:true,
+        options:['Not yet decided','Business Name (sole trader / single activity)','Company \u2013 Domestic','Company \u2013 Foreign-owned','Business Group (customary/rural)','Association (not-for-profit)']},
+      {id:'industry', label:'Industry', type:'select', options:INDUSTRY_OPTIONS, hint:'IPA\u2019s official business activity classification.'},
+      {id:'location', label:'Location', type:'input', hint:'District and province. IPA needs a street or section address for the registered office \u2014 PO Box and village addresses only work for the separate postal address.'},
       {id:'pitch', label:'What does it do?', type:'textarea', hint:'One or two sentences.'}
+    ]},
+  { key:'registration', label:'Registration', title:'Registration & compliance', sub:'How this business is registered and taxed in Papua New Guinea.',
+    fields:[
+      {id:'ipaStatus', label:'IPA registration status', type:'select',
+        options:['Not yet registered','Name reserved with IPA','Registered with IPA','Trading, registration in progress']},
+      {id:'ipaNumber', label:'IPA registration / certificate number', type:'input', hint:'Leave blank if not yet issued.'},
+      {id:'tin', label:'IRC Taxpayer Identification Number (TIN)', type:'input', hint:'Leave blank if not yet applied for.'},
+      {id:'gstStatus', label:'GST registration', type:'select',
+        options:['Not registered for GST','Registered for GST','Not sure yet']}
     ]},
   { key:'market', label:'Market', title:'The market', sub:'Who this is for, and who else is already serving them.',
     fields:[
@@ -257,6 +299,7 @@ const INTAKE_SECTIONS = [
 const PLAN_SECTIONS = [
   { id:'exec', title:'Executive Summary', instr:'Summarize the whole business in a compelling overview: what it is, the opportunity, and what it needs to succeed.' },
   { id:'company', title:'Company Description', instr:'Describe the business itself \u2014 what it does, its structure, and where it operates.' },
+  { id:'compliance', title:'Registration & Compliance', instr:'Describe how the business is or will be registered with the Investment Promotion Authority (IPA) under the entity type given, its current registration status, and its tax position with the Internal Revenue Commission (IRC), including its TIN and GST status if provided. If registration or the TIN is still pending, say so plainly and note it as a next step rather than inventing a status.' },
   { id:'market', title:'Market Analysis', instr:'Describe the target customers, the size and nature of the opportunity, the competitive landscape, and how the business is positioned within it.' },
   { id:'product', title:'Products & Services', instr:'Describe what is being sold and how it is priced or monetized.' },
   { id:'marketing', title:'Marketing & Sales Strategy', instr:'Describe how the business will reach customers and convert interest into sales, based on the target market and stated advantage.' },
@@ -298,7 +341,8 @@ function renderIntake(){
     const hint = f.hint ? `<span class="hint">${f.hint}</span>` : '';
     if(f.type==='select'){
       const opts = f.options.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('');
-      return `<div class="field"><label>${f.label}${hint}</label><select id="${f.id}">${opts}</select></div>`;
+      const note = f.note ? `<div class="entity-note" id="note-${f.id}"></div>` : '';
+      return `<div class="field"><label>${f.label}${hint}</label><select id="${f.id}">${opts}</select>${note}</div>`;
     }
     if(f.type==='textarea'){
       return `<div class="field"><label>${f.label}${hint}</label><textarea id="${f.id}">${escapeHtml(val)}</textarea></div>`;
@@ -324,7 +368,8 @@ function renderIntake(){
 
   sec.fields.forEach(f=>{
     const el = document.getElementById(f.id);
-    el.addEventListener('input', ()=>{ state[f.id]=el.value; updateCoverPreview(); });
+    el.addEventListener('input', ()=>{ state[f.id]=el.value; updateCoverPreview(); if(f.note) updateEntityNote(f.id); });
+    if(f.note) updateEntityNote(f.id);
   });
 
   document.getElementById('btnBack').addEventListener('click', ()=>{ if(currentSection>0){ currentSection--; renderIntake(); }});
@@ -346,6 +391,11 @@ function flashRequired(){
   });
 }
 
+function updateEntityNote(fieldId){
+  const note = document.getElementById('note-'+fieldId);
+  if(note) note.textContent = ENTITY_NOTES[state[fieldId]] || '';
+}
+
 function updateCoverPreview(){
   document.getElementById('coverName').textContent = state.businessName.trim() || 'Your business name';
   const meta = [state.businessType, state.industry].filter(Boolean).join(' · ');
@@ -359,10 +409,14 @@ function escapeHtml(str){
 /* ---------------- Generation ---------------- */
 function buildContext(){
   return `Business name: ${state.businessName}
-Type: ${state.businessType}
+Entity type (IPA classification): ${state.businessType}
 Industry: ${state.industry || 'not specified'}
 Location: ${state.location || 'not specified'}
 One-line pitch: ${state.pitch}
+IPA registration status: ${state.ipaStatus}
+IPA registration / certificate number: ${state.ipaNumber || 'not yet issued'}
+IRC Taxpayer Identification Number (TIN): ${state.tin || 'not yet issued'}
+GST registration: ${state.gstStatus}
 Target customers: ${state.targetCustomers || 'not specified'}
 Market size / opportunity: ${state.marketSize || 'not specified'}
 Competitors: ${state.competitors || 'not specified'}
@@ -385,12 +439,17 @@ function activeSections(){
 }
 
 async function callSection(sec){
-  const system = `You are a professional business-plan writer. Write only the body content for one section of a business plan, given the details provided.
+  const system = `You are a professional business-plan writer, writing for a business operating in Papua New Guinea (PNG). Write only the body content for one section of a business plan, given the details provided.
+PNG context \u2014 use this terminology exactly and never substitute foreign equivalents:
+- Businesses register with the Investment Promotion Authority (IPA) as one of four entity types: a Business Name, a Company, a Business Group, or an Association. Never say "LLC," "Inc.," "Pty Ltd," or "sole proprietorship."
+- A company more than 50% owned or controlled by non-citizens registers the same way as any other company, but must also apply separately for a foreign enterprise / IPA certificate under the Investment Promotion Act, within 14 days of incorporation.
+- Tax registration is with the Internal Revenue Commission (IRC), identified by a Taxpayer Identification Number (TIN). Never say "EIN," "ABN," or "SSN."
+- The consumption tax is GST (Goods and Services Tax), not VAT.
 Rules:
 - Plain prose only. No headings, no markdown symbols, no bullet dashes, no preamble like "Here is...".
 - 3 to 6 sentences, occasionally a short second paragraph if the section needs it (separate paragraphs with a blank line).
-- Match tone to the business type given (formal for a Corporation, lean and direct for a Startup, mission-led for a Nonprofit, etc).
-- Base every claim only on the details given. Do not invent specific figures that weren't provided, but you may reason qualitatively.
+- Match tone to the entity type given (formal for a Company, mission-led for an Association, practical and direct for a Business Name or Business Group).
+- Base every claim only on the details given. Do not invent registration numbers, TINs, or figures that weren't provided \u2014 if a registration step is still pending, say so plainly as a next step rather than implying it's done.
 - Write in third person about the business, as it would read in an actual plan document.`;
   const userMsg = `Business details:\n${buildContext()}\n\nWrite the "${sec.title}" section. ${sec.instr}`;
 
@@ -497,7 +556,8 @@ document.getElementById('btnDownload').addEventListener('click', ()=>{
 });
 
 document.getElementById('btnRestart').addEventListener('click', ()=>{
-  Object.keys(state).forEach(k=> state[k] = (k==='businessType') ? 'Startup' : '');
+  const defaults = { businessType:'Not yet decided', industry:'Not yet specified', ipaStatus:'Not yet registered', gstStatus:'Not registered for GST' };
+  Object.keys(state).forEach(k=> state[k] = defaults[k] || '');
   Object.keys(results).forEach(k=> delete results[k]);
   currentSection = 0;
   document.getElementById('appShell').classList.remove('doc-mode');
