@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prospectus — draft a business plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16233A;
+    --ink-soft:#223350;
+    --paper:#F3EFE4;
+    --paper-dim:#E9E2CE;
+    --brass:#A6813C;
+    --brass-bright:#C9A15C;
+    --forest:#33503F;
+    --rust:#8C3B2E;
+    --pencil:#7C8494;
+    --text-on-ink:#EDE7D8;
+    --serif:'Fraunces', serif;
+    --sans:'Inter', sans-serif;
+    --mono:'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--paper);color:var(--ink);font-family:var(--sans);}
+  button{font-family:var(--sans);cursor:pointer;}
+  input,textarea{font-family:var(--sans);}
+  ::selection{background:var(--brass-bright);color:var(--ink);}
+
+  .app-shell{display:flex;min-height:100vh;}
+
+  /* ---------- Left rail ---------- */
+  .rail{
+    width:300px;flex-shrink:0;background:var(--ink);color:var(--text-on-ink);
+    padding:2.25rem 1.75rem;display:flex;flex-direction:column;
+    position:sticky;top:0;height:100vh;overflow-y:auto;
+    transition:margin-left .5s ease, opacity .4s ease;
+  }
+  .brand{margin-bottom:2.25rem;}
+  .brand-mark{font-family:var(--serif);font-weight:600;font-size:1.5rem;letter-spacing:.02em;}
+  .brand-tag{font-family:var(--mono);font-size:.68rem;color:var(--brass-bright);letter-spacing:.12em;text-transform:uppercase;margin-top:.35rem;}
+
+  .tabs{display:flex;flex-direction:column;gap:.15rem;margin-bottom:2rem;}
+  .tab{
+    display:flex;align-items:center;gap:.75rem;background:none;border:none;
+    color:var(--pencil);text-align:left;padding:.65rem .5rem;border-left:2px solid transparent;
+    font-size:.92rem;transition:color .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .tab-num{font-family:var(--mono);font-size:.72rem;color:inherit;}
+  .tab:hover{color:var(--text-on-ink);}
+  .tab.active{color:var(--brass-bright);border-left-color:var(--brass);background:rgba(201,161,92,.06);}
+  .tab.done .tab-num::after{content:' ✓';color:var(--forest);}
+
+  .cover-preview{
+    margin-top:auto;padding:1.25rem 1rem;border:1px solid rgba(237,231,216,.16);
+    background:var(--ink-soft);
+  }
+  .cover-mono{font-family:var(--mono);font-size:.62rem;letter-spacing:.16em;color:var(--brass-bright);}
+  .cover-name{font-family:var(--serif);font-weight:600;font-size:1.15rem;margin-top:.5rem;line-height:1.25;
+    color:var(--text-on-ink);word-break:break-word;}
+  .cover-meta{font-family:var(--mono);font-size:.68rem;color:var(--pencil);margin-top:.4rem;}
+
+  /* ---------- Main / intake ---------- */
+  .main{flex:1;min-width:0;padding:3.5rem clamp(1.5rem,6vw,5rem);}
+  .panel{max-width:640px;animation:rise .45s ease both;}
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .panel-eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.14em;color:var(--brass);text-transform:uppercase;}
+  .panel-title{font-family:var(--serif);font-weight:600;font-size:2.1rem;margin:.5rem 0 .35rem;}
+  .panel-sub{color:var(--pencil);font-size:.95rem;margin-bottom:2rem;}
+
+  .field{margin-bottom:1.4rem;}
+  .field label{display:block;font-size:.85rem;font-weight:600;margin-bottom:.4rem;}
+  .field .hint{display:block;font-size:.78rem;color:var(--pencil);font-weight:400;margin-top:.15rem;}
+  .field input, .field textarea{
+    width:100%;border:1px solid #cfc6ab;background:#fff;padding:.65rem .75rem;
+    font-size:.95rem;border-radius:2px;color:var(--ink);resize:vertical;
+  }
+  .field textarea{min-height:4.5rem;line-height:1.45;}
+  .field input:focus, .field textarea:focus{outline:2px solid var(--brass);outline-offset:1px;border-color:var(--brass);}
+
+  .nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:2.25rem;max-width:640px;}
+  .btn{
+    font-size:.88rem;font-weight:600;padding:.7rem 1.4rem;border-radius:2px;border:1px solid var(--ink);
+    background:none;color:var(--ink);transition:background .2s ease, color .2s ease, transform .1s ease;
+  }
+  .btn:hover{background:var(--ink);color:var(--paper);}
+  .btn:active{transform:scale(.98);}
+  .btn.primary{background:var(--ink);color:var(--paper);}
+  .btn.primary:hover{background:var(--brass);border-color:var(--brass);}
+  .btn.ghost{border-color:transparent;color:var(--pencil);}
+  .btn.ghost:hover{background:var(--paper-dim);color:var(--ink);}
+  .btn:disabled{opacity:.35;pointer-events:none;}
+
+  /* ---------- Generating view ---------- */
+  .gen-list{list-style:none;padding:0;margin:1.5rem 0 0;max-width:520px;}
+  .gen-list li{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--paper-dim);font-size:.95rem;}
+  .gen-status{font-family:var(--mono);width:1.1rem;text-align:center;color:var(--pencil);}
+  .gen-list li.writing .gen-status{color:var(--brass);animation:pulse 1s ease-in-out infinite;}
+  .gen-list li.done .gen-status{color:var(--forest);}
+  .gen-list li.error .gen-status{color:var(--rust);}
+  @keyframes pulse{0%,100%{opacity:.35;}50%{opacity:1;}}
+
+  /* ---------- Document view ---------- */
+  .doc-actions{display:flex;gap:.6rem;margin-bottom:2.5rem;flex-wrap:wrap;}
+  .doc-wrap{max-width:760px;margin:0 auto;}
+  .doc-cover{text-align:center;padding:4rem 1rem 3.5rem;border-bottom:1px solid var(--paper-dim);margin-bottom:2.5rem;}
+  .doc-cover-eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.2em;color:var(--brass);}
+  .doc-cover h1{font-family:var(--serif);font-weight:700;font-size:clamp(2rem,5vw,3rem);margin:.9rem 0 .5rem;line-height:1.1;}
+  .doc-cover p{color:var(--pencil);font-size:1.05rem;max-width:32rem;margin:0 auto;}
+  .doc-cover-meta{font-family:var(--mono);font-size:.75rem;color:var(--pencil);margin-top:1.5rem;display:flex;gap:1rem;justify-content:center;}
+
+  .doc-toc{margin-bottom:3rem;}
+  .doc-toc ol{list-style:none;padding:0;margin:1rem 0 0;counter-reset:toc;}
+  .doc-toc li{counter-increment:toc;font-family:var(--mono);font-size:.85rem;padding:.4rem 0;border-bottom:1px dotted var(--paper-dim);
+    display:flex;justify-content:space-between;cursor:pointer;color:var(--ink);}
+  .doc-toc li:hover{color:var(--brass);}
+  .doc-toc li a{color:inherit;text-decoration:none;flex:1;}
+  .doc-toc li::before{content:counter(toc,decimal-leading-zero) " ";color:var(--brass);margin-right:.6rem;}
+
+  .doc-section{padding:2.25rem 0;border-bottom:1px solid var(--paper-dim);}
+  .doc-section-num{font-family:var(--mono);font-size:.72rem;color:var(--brass);letter-spacing:.1em;}
+  .doc-section h2{font-family:var(--serif);font-weight:600;font-size:1.5rem;margin:.4rem 0 1rem;}
+  .doc-section-body{font-size:1rem;line-height:1.7;white-space:pre-wrap;border-radius:2px;padding:.25rem;margin:-.25rem;}
+  .doc-section-body[contenteditable="true"]:focus{outline:2px dashed var(--brass);outline-offset:4px;background:#fffdf7;}
+  .doc-edit-hint{font-family:var(--mono);font-size:.7rem;color:var(--pencil);margin-top:2rem;text-align:center;}
+
+  .doc-mode .rail{margin-left:-300px;opacity:0;pointer-events:none;position:absolute;}
+  .doc-mode .main{padding-top:2.5rem;}
+
+  [hidden]{display:none !important;}
+
+  @media (max-width:760px){
+    .app-shell{flex-direction:column;}
+    .rail{position:relative;height:auto;width:auto;top:0;}
+    .doc-mode .rail{display:none;}
+    .main{padding:2rem 1.25rem;}
+  }
+
+  @media print{
+    .rail,.doc-actions,.doc-toc{display:none !important;}
+    .doc-section-body[contenteditable]{outline:none;}
+    body{background:#fff;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell" id="appShell">
+
+  <aside class="rail" id="rail">
+    <div class="brand">
+      <div class="brand-mark">Prospectus</div>
+      <div class="brand-tag">state the idea properly</div>
+    </div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="cover-preview">
+      <div class="cover-mono">draft prospectus</div>
+      <div class="cover-name" id="coverName">Your business name</div>
+      <div class="cover-meta" id="coverMeta">Type · Industry</div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <div id="intakeView"></div>
+
+    <div id="generatingView" hidden>
+      <div class="panel-eyebrow">Compiling</div>
+      <h2 class="panel-title">Writing the prospectus…</h2>
+      <p class="panel-sub">Each section is drafted from what you entered. This takes a minute.</p>
+      <ul class="gen-list" id="genList"></ul>
+      <div class="nav-row" id="retryRow" hidden>
+        <button class="btn" id="btnRetry">Retry failed sections</button>
+        <span></span>
+      </div>
+    </div>
+
+    <div id="documentView" hidden>
+      <div class="doc-wrap">
+        <div class="doc-actions">
+          <button class="btn primary" id="btnDownload">Download as text</button>
+          <button class="btn" id="btnPrint">Print</button>
+          <button class="btn ghost" id="btnRestart">Start a new plan</button>
+        </div>
+        <div class="doc-cover">
+          <div class="doc-cover-eyebrow">Prospectus</div>
+          <h1 id="docName"></h1>
+          <p id="docTagline"></p>
+          <div class="doc-cover-meta"><span id="docType"></span><span id="docDate"></span></div>
+        </div>
+        <div class="doc-toc">
+          <div class="panel-eyebrow">Contents</div>
+          <ol id="tocList"></ol>
+        </div>
+        <div id="docSections"></div>
+        <p class="doc-edit-hint">Click any paragraph to edit it directly. This is an AI-drafted first pass — review it before using it anywhere formal.</p>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ---------------- Data model ---------------- */
+const state = {
+  businessName:'', businessType:'Startup', industry:'', location:'', pitch:'',
+  targetCustomers:'', marketSize:'', competitors:'', advantage:'',
+  offerings:'', pricingModel:'',
+  team:'', facilities:'', partners:'',
+  startupCosts:'', revenueProjection:'', fundingNeeded:'',
+  shortTermGoals:'', longTermVision:'', risks:''
+};
+
+const INTAKE_SECTIONS = [
+  { key:'company', label:'Company', title:'Company basics', sub:'Start with the fundamentals — who, what, and where.',
+    fields:[
+      {id:'businessName', label:'Business name', type:'input'},
+      {id:'businessType', label:'Business type', type:'select', options:['Startup','Small Business','Corporation','Nonprofit / Social Enterprise','Cooperative']},
+      {id:'industry', label:'Industry', type:'input'},
+      {id:'location', label:'Location', type:'input'},
+      {id:'pitch', label:'What does it do?', type:'textarea', hint:'One or two sentences.'}
+    ]},
+  { key:'market', label:'Market', title:'The market', sub:'Who this is for, and who else is already serving them.',
+    fields:[
+      {id:'targetCustomers', label:'Target customers', type:'textarea'},
+      {id:'marketSize', label:'Market size / opportunity', type:'textarea', hint:'Rough numbers are fine.'},
+      {id:'competitors', label:'Key competitors', type:'textarea'},
+      {id:'advantage', label:'Competitive advantage', type:'textarea', hint:'What makes this different or better?'}
+    ]},
+  { key:'product', label:'Product', title:'Products & services', sub:'What is actually being sold.',
+    fields:[
+      {id:'offerings', label:'Products / services offered', type:'textarea'},
+      {id:'pricingModel', label:'Pricing / revenue model', type:'textarea'}
+    ]},
+  { key:'ops', label:'Operations', title:'Organization & operations', sub:'Who runs it, and where the work happens.',
+    fields:[
+      {id:'team', label:'Team', type:'textarea', hint:'Who\u2019s involved, and what they bring.'},
+      {id:'facilities', label:'Facilities / location of operations', type:'textarea'},
+      {id:'partners', label:'Key partners or suppliers', type:'textarea', hint:'Optional.'}
+    ]},
+  { key:'financials', label:'Financials', title:'Financial plan', sub:'What it costs, and what it earns.',
+    fields:[
+      {id:'startupCosts', label:'Startup / operating costs', type:'textarea'},
+      {id:'revenueProjection', label:'Revenue projections', type:'textarea'},
+      {id:'fundingNeeded', label:'Funding needed, and its use', type:'textarea', hint:'Leave blank if self-funded.'}
+    ]},
+  { key:'goals', label:'Goals', title:'Goals & risks', sub:'Where this is headed, and what could get in the way.',
+    fields:[
+      {id:'shortTermGoals', label:'Short-term goals (6\u201312 months)', type:'textarea'},
+      {id:'longTermVision', label:'Long-term vision (3\u20135 years)', type:'textarea'},
+      {id:'risks', label:'Key risks', type:'textarea', hint:'Optional.'}
+    ]}
+];
+
+const PLAN_SECTIONS = [
+  { id:'exec', title:'Executive Summary', instr:'Summarize the whole business in a compelling overview: what it is, the opportunity, and what it needs to succeed.' },
+  { id:'company', title:'Company Description', instr:'Describe the business itself \u2014 what it does, its structure, and where it operates.' },
+  { id:'market', title:'Market Analysis', instr:'Describe the target customers, the size and nature of the opportunity, the competitive landscape, and how the business is positioned within it.' },
+  { id:'product', title:'Products & Services', instr:'Describe what is being sold and how it is priced or monetized.' },
+  { id:'marketing', title:'Marketing & Sales Strategy', instr:'Describe how the business will reach customers and convert interest into sales, based on the target market and stated advantage.' },
+  { id:'org', title:'Organization & Management', instr:'Describe who runs the business, key roles, and where operations are based.' },
+  { id:'financial', title:'Financial Plan', instr:'Describe startup costs and revenue projections in narrative form.' },
+  { id:'funding', title:'Funding Request', instr:'Describe the funding required and how it will be used.', includeIf: s => !!s.fundingNeeded.trim() },
+  { id:'goals', title:'Goals & Milestones', instr:'Describe the short-term goals and the long-term vision.' },
+  { id:'risk', title:'Risk Analysis', instr:'Describe the key risks identified and how they will be mitigated.', includeIf: s => !!s.risks.trim() },
+  { id:'conclusion', title:'Conclusion', instr:'Close the plan with a brief, confident statement of why this business will work.' }
+];
+
+let currentSection = 0;
+const results = {};
+
+/* ---------------- Intake rendering ---------------- */
+const tabsEl = document.getElementById('tabs');
+const intakeView = document.getElementById('intakeView');
+
+function renderTabs(){
+  tabsEl.innerHTML = INTAKE_SECTIONS.map((s,i)=>{
+    const done = sectionFilled(i) && i !== currentSection;
+    return `<button class="tab ${i===currentSection?'active':''} ${done?'done':''}" data-i="${i}">
+      <span class="tab-num">${String(i+1).padStart(2,'0')}</span><span class="tab-label">${s.label}</span>
+    </button>`;
+  }).join('');
+  tabsEl.querySelectorAll('.tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ currentSection = parseInt(btn.dataset.i); renderIntake(); });
+  });
+}
+
+function sectionFilled(i){
+  return INTAKE_SECTIONS[i].fields.some(f => (state[f.id]||'').trim().length>0);
+}
+
+function renderIntake(){
+  const sec = INTAKE_SECTIONS[currentSection];
+  const fieldsHtml = sec.fields.map(f=>{
+    const val = state[f.id] || '';
+    const hint = f.hint ? `<span class="hint">${f.hint}</span>` : '';
+    if(f.type==='select'){
+      const opts = f.options.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('');
+      return `<div class="field"><label>${f.label}${hint}</label><select id="${f.id}">${opts}</select></div>`;
+    }
+    if(f.type==='textarea'){
+      return `<div class="field"><label>${f.label}${hint}</label><textarea id="${f.id}">${escapeHtml(val)}</textarea></div>`;
+    }
+    return `<div class="field"><label>${f.label}${hint}</label><input type="text" id="${f.id}" value="${escapeHtml(val)}"></div>`;
+  }).join('');
+
+  const isFirst = currentSection===0;
+  const isLast = currentSection===INTAKE_SECTIONS.length-1;
+
+  intakeView.innerHTML = `
+    <div class="panel">
+      <div class="panel-eyebrow">Section ${String(currentSection+1).padStart(2,'0')} / ${String(INTAKE_SECTIONS.length).padStart(2,'0')}</div>
+      <h2 class="panel-title">${sec.title}</h2>
+      <p class="panel-sub">${sec.sub}</p>
+      ${fieldsHtml}
+      <div class="nav-row">
+        <button class="btn ghost" id="btnBack" ${isFirst?'disabled':''}>&larr; Back</button>
+        <button class="btn primary" id="btnNext">${isLast?'Compile the plan \u2192':'Next \u2192'}</button>
+      </div>
+    </div>
+  `;
+
+  sec.fields.forEach(f=>{
+    const el = document.getElementById(f.id);
+    el.addEventListener('input', ()=>{ state[f.id]=el.value; updateCoverPreview(); });
+  });
+
+  document.getElementById('btnBack').addEventListener('click', ()=>{ if(currentSection>0){ currentSection--; renderIntake(); }});
+  document.getElementById('btnNext').addEventListener('click', ()=>{
+    if(currentSection===0 && (!state.businessName.trim() || !state.pitch.trim())){
+      flashRequired(); return;
+    }
+    if(isLast){ startGeneration(); return; }
+    currentSection++; renderIntake();
+  });
+
+  renderTabs();
+}
+
+function flashRequired(){
+  ['businessName','pitch'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && !state[id].trim()){ el.style.borderColor = 'var(--rust)'; el.focus(); }
+  });
+}
+
+function updateCoverPreview(){
+  document.getElementById('coverName').textContent = state.businessName.trim() || 'Your business name';
+  const meta = [state.businessType, state.industry].filter(Boolean).join(' · ');
+  document.getElementById('coverMeta').textContent = meta || 'Type · Industry';
+}
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---------------- Generation ---------------- */
+function buildContext(){
+  return `Business name: ${state.businessName}
+Type: ${state.businessType}
+Industry: ${state.industry || 'not specified'}
+Location: ${state.location || 'not specified'}
+One-line pitch: ${state.pitch}
+Target customers: ${state.targetCustomers || 'not specified'}
+Market size / opportunity: ${state.marketSize || 'not specified'}
+Competitors: ${state.competitors || 'not specified'}
+Competitive advantage: ${state.advantage || 'not specified'}
+Products/services offered: ${state.offerings || 'not specified'}
+Pricing / revenue model: ${state.pricingModel || 'not specified'}
+Team: ${state.team || 'not specified'}
+Facilities / where work happens: ${state.facilities || 'not specified'}
+Partners/suppliers: ${state.partners || 'none specified'}
+Startup costs: ${state.startupCosts || 'not specified'}
+Revenue projections: ${state.revenueProjection || 'not specified'}
+Funding needed: ${state.fundingNeeded || 'not seeking external funding'}
+Short-term goals: ${state.shortTermGoals || 'not specified'}
+Long-term vision: ${state.longTermVision || 'not specified'}
+Risks: ${state.risks || 'not specified'}`;
+}
+
+function activeSections(){
+  return PLAN_SECTIONS.filter(s => !s.includeIf || s.includeIf(state));
+}
+
+async function callSection(sec){
+  const system = `You are a professional business-plan writer. Write only the body content for one section of a business plan, given the details provided.
+Rules:
+- Plain prose only. No headings, no markdown symbols, no bullet dashes, no preamble like "Here is...".
+- 3 to 6 sentences, occasionally a short second paragraph if the section needs it (separate paragraphs with a blank line).
+- Match tone to the business type given (formal for a Corporation, lean and direct for a Startup, mission-led for a Nonprofit, etc).
+- Base every claim only on the details given. Do not invent specific figures that weren't provided, but you may reason qualitatively.
+- Write in third person about the business, as it would read in an actual plan document.`;
+  const userMsg = `Business details:\n${buildContext()}\n\nWrite the "${sec.title}" section. ${sec.instr}`;
+
+  const resp = await fetch("https://api.anthropic.com/v1/messages", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      model:"claude-sonnet-4-6",
+      max_tokens:1000,
+      system,
+      messages:[{ role:"user", content:userMsg }]
+    })
+  });
+  if(!resp.ok) throw new Error('request failed');
+  const data = await resp.json();
+  const text = (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+  if(!text) throw new Error('empty response');
+  return text;
+}
+
+const generatingView = document.getElementById('generatingView');
+const genListEl = document.getElementById('genList');
+
+async function startGeneration(){
+  document.getElementById('intakeView').hidden = true;
+  generatingView.hidden = false;
+
+  const secs = activeSections();
+  genListEl.innerHTML = secs.map(s=>`<li id="gen-${s.id}"><span class="gen-status">\u00b7</span><span class="gen-title">${s.title}</span></li>`).join('');
+
+  await runQueue(secs);
+}
+
+async function runQueue(secs){
+  let anyError = false;
+  for(const sec of secs){
+    const li = document.getElementById('gen-'+sec.id);
+    li.className = 'writing';
+    li.querySelector('.gen-status').textContent = '\u2014';
+    try{
+      const text = await callSection(sec);
+      results[sec.id] = text;
+      li.className = 'done';
+      li.querySelector('.gen-status').textContent = '\u2713';
+    }catch(e){
+      li.className = 'error';
+      li.querySelector('.gen-status').textContent = '!';
+      anyError = true;
+    }
+  }
+  if(anyError){
+    document.getElementById('retryRow').hidden = false;
+  } else {
+    renderDocument();
+  }
+}
+
+document.getElementById('btnRetry').addEventListener('click', async ()=>{
+  document.getElementById('retryRow').hidden = true;
+  const failed = activeSections().filter(s => !results[s.id]);
+  await runQueue(failed);
+});
+
+/* ---------------- Document view ---------------- */
+const documentView = document.getElementById('documentView');
+
+function renderDocument(){
+  generatingView.hidden = true;
+  documentView.hidden = false;
+  document.getElementById('appShell').classList.add('doc-mode');
+
+  document.getElementById('docName').textContent = state.businessName;
+  document.getElementById('docTagline').textContent = state.pitch;
+  document.getElementById('docType').textContent = [state.businessType, state.industry].filter(Boolean).join(' \u00b7 ');
+  document.getElementById('docDate').textContent = new Date().toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+
+  const secs = activeSections();
+  document.getElementById('tocList').innerHTML = secs.map(s=>`<li><a href="#sec-${s.id}">${s.title}</a></li>`).join('');
+
+  document.getElementById('docSections').innerHTML = secs.map((s,i)=>`
+    <article class="doc-section" id="sec-${s.id}">
+      <div class="doc-section-num">${String(i+1).padStart(2,'0')}</div>
+      <h2>${s.title}</h2>
+      <div class="doc-section-body" contenteditable="true">${escapeHtml(results[s.id]||'')}</div>
+    </article>
+  `).join('');
+}
+
+document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+
+document.getElementById('btnDownload').addEventListener('click', ()=>{
+  const secs = activeSections();
+  let out = `${state.businessName}\n${state.pitch}\n${[state.businessType,state.industry].filter(Boolean).join(' \u00b7 ')}\n\n`;
+  secs.forEach(s=>{
+    const body = document.getElementById('sec-'+s.id).querySelector('.doc-section-body').innerText;
+    out += `${s.title.toUpperCase()}\n${'-'.repeat(s.title.length)}\n${body}\n\n`;
+  });
+  const blob = new Blob([out], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (state.businessName.trim().replace(/[^a-z0-9]+/gi,'-') || 'business-plan') + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('btnRestart').addEventListener('click', ()=>{
+  Object.keys(state).forEach(k=> state[k] = (k==='businessType') ? 'Startup' : '');
+  Object.keys(results).forEach(k=> delete results[k]);
+  currentSection = 0;
+  document.getElementById('appShell').classList.remove('doc-mode');
+  documentView.hidden = true;
+  document.getElementById('intakeView').hidden = false;
+  updateCoverPreview();
+  renderIntake();
+});
+
+/* ---------------- Init ---------------- */
+updateCoverPreview();
+renderIntake();
+</script>
+</body>
+</html>
